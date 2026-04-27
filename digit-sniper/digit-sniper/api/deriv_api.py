@@ -9,6 +9,25 @@ class DerivAPI:
     Handles connection to Deriv WebSocket API.
     Streams market data and handles auth + requests.
     """
+        # --------------------------
+    # BUY CONTRACT (OVER / UNDER)
+    # --------------------------
+    def buy_contract(self, symbol="R_100", contract_type="DIGITOVER", barrier=5, amount=1):
+        request = {
+            "buy": 1,
+            "price": amount,
+            "parameters": {
+                "amount": amount,
+                "basis": "stake",
+                "contract_type": contract_type,
+                "currency": "USD",
+                "duration": 1,
+                "duration_unit": "t",
+                "symbol": symbol,
+                "barrier": str(barrier)
+            }
+        }
+        self.send(request)
 
     def __init__(self, app_id, token=None):
         self.app_id = app_id

@@ -3,16 +3,18 @@ from collections import deque
 
 class SignalEngine:
     """
-    Converts raw market ticks into simple trading signals.
-    Phase 1: digit-based momentum logic (simple + expandable)
+    OVER / UNDER Digit Sniper Engine
+    - Tracks digit distribution
+    - Generates probability-based signals
+    - Adds confidence scoring
     """
 
-    def __init__(self, window_size=20):
+    def __init__(self, window_size=30):
         self.prices = deque(maxlen=window_size)
         self.digits = deque(maxlen=window_size)
 
     # --------------------------
-    # PROCESS INCOMING TICK
+    # INPUT STREAM
     # --------------------------
     def add_tick(self, price):
         self.prices.append(price)
@@ -23,35 +25,57 @@ class SignalEngine:
         return self.generate_signal()
 
     # --------------------------
-    # CORE LOGIC (PHASE 1)
+    # CORE SNIPER LOGIC
     # --------------------------
     def generate_signal(self):
-        if len(self.digits) < 10:
-            return "WAIT"
+        if len(self.digits) < 15:
+            return {"signal": "WAIT", "confidence": 0}
 
-        # count digit frequency
-        freq = {}
-        for d in self.digits:
-            freq[d] = freq.get(d, 0) + 1
+        # classify digits
+        low_digits = [0, 1, 2, 3, 4]
+        high_digits = [5, 6, 7, 8, 9]
 
-        most_common_digit = max(freq, key=freq.get)
-        least_common_digit = min(freq, key=freq.get)
+        low_count = sum(1 for d in self.digits if d in low_digits)
+        high_count = sum(1 for d in self.digits if d in high_digits)
+
+        total = len(self.digits)
+
+        low_prob = low_count / total
+        high_prob = high_count / total
 
         last_digit = self.digits[-1]
 
         # --------------------------
-        # SIMPLE SNIPER RULES
+        # CONFIDENCE CALCULATION
+        # --------------------------
+        confidence = abs(high_prob - low_prob) * 100
+
+        # --------------------------
+        # SIGNAL RULES
         # --------------------------
 
-        # 🔥 reversal signal
-        if last_digit == least_common_digit:
-            return "BUY"
+        # OVER condition (high digits dominance expected)
+        if high_prob > low_prob and confidence > 10:
+            return {
+                "signal": "OVER",
+                "confidence": round(confidence, 2),
+                "last_digit": last_digit
+            }
 
-        # 🔻 exhaustion signal
-        if last_digit == most_common_digit:
-            return "SELL"
+        # UNDER condition (low digits dominance expected)
+        if low_prob > high_prob and confidence > 10:
+            return {
+                "signal": "UNDER",
+                "confidence": round(confidence, 2),
+                "last_digit": last_digit
+            }
 
-        return "WAIT"
+        # no edge
+        return {
+            "signal": "WAIT",
+            "confidence": round(confidence, 2),
+            "last_digit": last_digit
+        }
 
     # --------------------------
     # DEBUG VIEW

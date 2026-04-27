@@ -34,3 +34,10 @@ class DigitSniperBot:
 if __name__ == "__main__":
     bot = DigitSniperBot()
     bot.start()
+
+    self.current_trade = {
+    "strategy": "ZERO_ONE",
+    "signal": "OVER",
+    "barrier": 1,
+    "stake": self.risk.get_stake()
+}

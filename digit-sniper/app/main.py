@@ -41,3 +41,4 @@ if __name__ == "__main__":
     "barrier": 1,
     "stake": self.risk.get_stake()
 }
+from core.strategy_guard import StrategyGuard

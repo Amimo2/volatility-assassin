@@ -1,56 +1,68 @@
 class PerformanceTracker:
     """
-    Tracks bot performance:
-    - Wins / Losses
-    - Win rate
-    - Streaks
+    Tracks performance per strategy
     """
 
     def __init__(self):
-        self.total_trades = 0
-        self.wins = 0
-        self.losses = 0
-
-        self.current_streak = 0
-        self.best_streak = 0
-        self.worst_streak = 0
+        self.data = {}
 
     # --------------------------
-    def record_trade(self, result):
-        """
-        result: 'WIN' or 'LOSS'
-        """
-        self.total_trades += 1
+    def _init_strategy(self, strategy):
+        if strategy not in self.data:
+            self.data[strategy] = {
+                "total": 0,
+                "wins": 0,
+                "losses": 0,
+                "profit": 0,
+                "streak": 0,
+                "best_streak": 0,
+                "worst_streak": 0
+            }
+
+    # --------------------------
+    def record_trade(self, strategy, result, profit):
+        self._init_strategy(strategy)
+
+        s = self.data[strategy]
+
+        s["total"] += 1
+        s["profit"] += profit
 
         if result == "WIN":
-            self.wins += 1
-            self.current_streak += 1
+            s["wins"] += 1
+            s["streak"] += 1
         else:
-            self.losses += 1
-            self.current_streak -= 1
+            s["losses"] += 1
+            s["streak"] -= 1
 
-        # update streaks
-        self.best_streak = max(self.best_streak, self.current_streak)
-        self.worst_streak = min(self.worst_streak, self.current_streak)
-
-    # --------------------------
-    def win_rate(self):
-        if self.total_trades == 0:
-            return 0
-        return (self.wins / self.total_trades) * 100
+        s["best_streak"] = max(s["best_streak"], s["streak"])
+        s["worst_streak"] = min(s["worst_streak"], s["streak"])
 
     # --------------------------
-    def summary(self):
+    def summary(self, strategy=None):
+        if strategy:
+            s = self.data.get(strategy, {})
+            return self._format(s)
+
+        # all strategies
         return {
-            "total_trades": self.total_trades,
-            "wins": self.wins,
-            "losses": self.losses,
-            "win_rate": round(self.win_rate(), 2),
-            "best_streak": self.best_streak,
-            "worst_streak": self.worst_streak
+            k: self._format(v)
+            for k, v in self.data.items()
         }
 
-from core.tracker import PerformanceTracker
-    #---------------------------------------------
-    self.tracker = PerformanceTracker()
-self.last_signal = None
+    # --------------------------
+    def _format(self, s):
+        total = s.get("total", 0)
+        wins = s.get("wins", 0)
+
+        win_rate = (wins / total * 100) if total > 0 else 0
+
+        return {
+            "trades": total,
+            "wins": wins,
+            "losses": s.get("losses", 0),
+            "win_rate": round(win_rate, 2),
+            "profit": round(s.get("profit", 0), 2),
+            "best_streak": s.get("best_streak", 0),
+            "worst_streak": s.get("worst_streak", 0),
+        }

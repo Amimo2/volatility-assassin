@@ -1,12 +1,16 @@
 import streamlit as st
 import pandas as pd
 import os
+from streamlit_autorefresh import st_autorefresh
 
+st.set_page_config(page_title="Digit Sniper LIVE", layout="wide")
 
-st.set_page_config(page_title="Digit Sniper Dashboard", layout="wide")
+# --------------------------
+# AUTO REFRESH (every 2 seconds)
+# --------------------------
+st_autorefresh(interval=2000, key="datarefresh")
 
-st.title("📊 Digit Sniper Dashboard")
-
+st.title("📊 Digit Sniper LIVE Dashboard 🔴")
 
 # --------------------------
 # LOAD DATA
@@ -23,9 +27,8 @@ def load_data():
 
 trades, signals = load_data()
 
-
 # --------------------------
-# KPIs
+# KPI SECTION
 # --------------------------
 col1, col2, col3 = st.columns(3)
 
@@ -36,52 +39,51 @@ if len(trades) > 0:
 
     col1.metric("Total Trades", len(trades))
     col2.metric("Win Rate", f"{win_rate:.2f}%")
-    col3.metric("Net Profit", trades["profit"].sum())
+    col3.metric("Net Profit", f"{trades['profit'].sum():.2f}")
 
 else:
     col1.metric("Total Trades", 0)
     col2.metric("Win Rate", "0%")
-    col3.metric("Net Profit", 0)
+    col3.metric("Net Profit", "0")
 
 
 st.divider()
 
-
 # --------------------------
-# TRADE HISTORY
+# LIVE SIGNAL FEED
 # --------------------------
-st.subheader("💰 Trade History")
-
-if len(trades) > 0:
-    st.dataframe(trades.tail(20), use_container_width=True)
-else:
-    st.warning("No trade data yet")
-
-
-# --------------------------
-# SIGNAL HISTORY
-# --------------------------
-st.subheader("🎯 Signal History")
+st.subheader("🎯 Live Signals")
 
 if len(signals) > 0:
-    st.dataframe(signals.tail(20), use_container_width=True)
+    st.dataframe(signals.tail(10), use_container_width=True)
 else:
-    st.warning("No signal data yet")
+    st.warning("No signals yet")
 
 
 # --------------------------
-# CHARTS
+# LIVE TRADE FEED
 # --------------------------
-st.subheader("📈 Performance Chart")
+st.subheader("💰 Live Trades")
+
+if len(trades) > 0:
+    st.dataframe(trades.tail(10), use_container_width=True)
+else:
+    st.warning("No trades yet")
+
+
+# --------------------------
+# EQUITY CURVE (LIVE)
+# --------------------------
+st.subheader("📈 Equity Curve")
 
 if len(trades) > 0:
     trades["cumulative_profit"] = trades["profit"].cumsum()
     st.line_chart(trades["cumulative_profit"])
 else:
-    st.info("Waiting for data...")
+    st.info("Waiting for trades...")
 
 
 # --------------------------
-# REFRESH NOTE
+# STATUS INDICATOR
 # --------------------------
-st.caption("Refresh page to update live data")
+st.caption("🔴 LIVE MODE ACTIVE — updates every 2 seconds")

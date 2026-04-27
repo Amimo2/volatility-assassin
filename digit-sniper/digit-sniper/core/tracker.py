@@ -49,3 +49,5 @@ class PerformanceTracker:
             "best_streak": self.best_streak,
             "worst_streak": self.worst_streak
         }
+
+from core.tracker import PerformanceTracker

@@ -105,3 +105,45 @@ class SignalEngine:
             "prices": list(self.prices),
             "digits": list(self.digits),
         }
+        active = self.engine.get_active()
+
+for name, result in signals.items():
+
+    signal = result.get("signal")
+
+    if signal != "OVER":
+        continue
+
+    # only active strategy trades real money
+    if name != active:
+        print(f"👀 Paper mode: {name}")
+        continue
+
+    # check guard
+    if not self.strategy_guard.is_enabled(name):
+        print(f"⛔ Disabled: {name}")
+        continue
+
+    # filters
+    can_trade, reason = self.volatility.is_tradeable()
+    if not can_trade:
+        return
+
+    if self.momentum.get_momentum() != "UP":
+        return
+
+    print(f"🚀 REAL TRADE → {name}")
+
+    self.current_trade = {
+        "strategy": name,
+        "signal": "OVER",
+        "barrier": 1,
+        "stake": self.risk.get_stake()
+    }
+
+    self.api.buy_contract(
+        symbol="R_100",
+        contract_type="DIGITOVER",
+        barrier=1,
+        amount=self.current_trade["stake"]
+    )

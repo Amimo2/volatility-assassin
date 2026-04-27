@@ -43,3 +43,30 @@ if __name__ == "__main__":
 }
 from core.strategy_guard import StrategyGuard
 from core.recovery import StrategyRecovery
+class ZeroOneCounter:
+    def __init__(self):
+        self.buffer = []
+
+    def process(self, price):
+        digit = int(str(price)[-1])
+
+        self.buffer.append(digit)
+
+        if len(self.buffer) > 5:
+            self.buffer.pop(0)
+
+        if len(self.buffer) < 4:
+            return {"signal": "WAIT"}
+
+        # count 0/1 cluster
+        cluster = sum(1 for d in self.buffer if d in [0, 1])
+
+        # detect unstable clustering
+        if cluster >= 3:
+            return {
+                "signal": "UNDER",
+                "barrier": 1,
+                "entry": "COUNTER"
+            }
+
+        return {"signal": "WAIT"}

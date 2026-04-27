@@ -147,3 +147,57 @@ for name, result in signals.items():
         barrier=1,
         amount=self.current_trade["stake"]
     )
+    active = self.engine.get_active()
+
+for name, result in signals.items():
+
+    signal = result.get("signal")
+    barrier = result.get("barrier", 1)
+
+    if signal not in ["OVER", "UNDER"]:
+        continue
+
+    # only best strategy trades
+    if name != active:
+        print(f"👀 Paper mode: {name}")
+        continue
+
+    if not self.strategy_guard.is_enabled(name):
+        print(f"⛔ Disabled: {name}")
+        continue
+
+    # --------------------------
+    # Volatility filter
+    # --------------------------
+    can_trade, reason = self.volatility.is_tradeable()
+    if not can_trade:
+        return
+
+    # --------------------------
+    # Momentum filter
+    # --------------------------
+    momentum = self.momentum.get_momentum()
+
+    if signal == "OVER" and momentum != "UP":
+        return
+
+    if signal == "UNDER" and momentum != "DOWN":
+        return
+
+    print(f"🚀 REAL TRADE → {name} ({signal})")
+
+    self.current_trade = {
+        "strategy": name,
+        "signal": signal,
+        "barrier": barrier,
+        "stake": self.risk.get_stake()
+    }
+
+    contract_type = "DIGITOVER" if signal == "OVER" else "DIGITUNDER"
+
+    self.api.buy_contract(
+        symbol="R_100",
+        contract_type=contract_type,
+        barrier=barrier,
+        amount=self.current_trade["stake"]
+    )

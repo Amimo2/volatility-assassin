@@ -51,3 +51,6 @@ class PerformanceTracker:
         }
 
 from core.tracker import PerformanceTracker
+    #---------------------------------------------
+    self.tracker = PerformanceTracker()
+self.last_signal = None

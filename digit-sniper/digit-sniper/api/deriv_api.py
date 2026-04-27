@@ -80,6 +80,44 @@ class DerivAPI:
 
         else:
             print("📩 Raw:", data)
+            def _on_message(self, ws, message):
+        data = json.loads(message)
+
+        if "tick" in data:
+            self.handle_tick(data["tick"])
+
+        elif "proposal_open_contract" in data:
+            self.handle_contract(data["proposal_open_contract"])
+
+        else:
+            print("📩 Raw:", data)
+        def on_tick(self, tick):
+    price = float(tick["quote"])
+
+    result = self.signals.add_tick(price)
+    signal = result.get("signal")
+
+    print(f"📊 {price} | 🎯 {result}")
+
+    # only trade if no active contract
+    if signal in ["OVER", "UNDER"] and self.active_contract is None:
+
+        if signal == "OVER":
+            contract_type = "DIGITOVER"
+            barrier = 5
+
+        elif signal == "UNDER":
+            contract_type = "DIGITUNDER"
+            barrier = 5
+
+        print(f"🚀 Placing Trade: {signal}")
+
+        self.api.buy_contract(
+            symbol="R_100",
+            contract_type=contract_type,
+            barrier=barrier,
+            amount=1
+        )
 
     def _on_error(self, ws, error):
         print("⚠️ Error:", error)
@@ -127,3 +165,6 @@ class DerivAPI:
     def send(self, data):
         if self.ws:
             self.ws.send(json.dumps(data))
+    def handle_contract(self, contract):
+        # override in main.py
+        print("📄 Contract update:", contract)
